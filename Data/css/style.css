@@ -1,0 +1,426 @@
+/* Reset -------------------------------------------------- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* Root variables ----------------------------------------- */
+:root {
+  --sidebar-width:    220px;
+  --primary-color:    #4a90e2;
+  --secondary-color:  #ffffff;
+  --bg-light:         #f4f6f8;
+  --text-color:       #333333;
+  --radius:           0.5rem;
+  --spacing:          1rem;
+  --transition:       0.3s ease;
+  --font-family:      'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Layout with CSS Grid ---------------------------------- */
+body {
+  display: grid;
+  grid-template-areas:
+    "sidebar header"
+    "sidebar main"
+    "sidebar footer";
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  font-family: var(--font-family);
+  background: var(--bg-light);
+  color: var(--text-color);
+  overflow: hidden;
+}
+
+.sidebar {
+  grid-area: sidebar;
+  background: var(--primary-color);
+  color: var(--secondary-color);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing);
+  overflow-y: auto;
+}
+
+.header {
+  grid-area: header;
+  background: var(--secondary-color);
+  padding: var(--spacing);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.main {
+  grid-area: main;
+  padding: var(--spacing);
+  overflow-y: auto;
+}
+
+.footer {
+  grid-area: footer;
+  text-align: center;
+  background: var(--secondary-color);
+  padding: var(--spacing);
+  box-shadow: 0 -1px 3px rgba(0,0,0,0.1);
+}
+
+/* Menu --------------------------------------------------- */
+.menu ul {
+  list-style: none;
+}
+.menu li + li {
+  margin-top: 0.5rem;
+}
+.menu a {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  transition: background var(--transition);
+}
+.menu a:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Cards -------------------------------------------------- */
+.card {
+  background: var(--secondary-color);
+  margin-bottom: var(--spacing);
+  padding: var(--spacing);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.hidden {
+  display: none;
+}
+
+/* Forms -------------------------------------------------- */
+.form-group {
+  margin-bottom: var(--spacing);
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+}
+.form-group small {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #666;
+}
+.form-group.buttons {
+  display: flex;
+  gap: var(--spacing);
+}
+.button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.button.primary {
+  background: var(--primary-color);
+  color: var(--secondary-color);
+}
+.button.secondary {
+  background: #eaeaea;
+  color: var(--text-color);
+}
+.button:hover {
+  opacity: 0.9;
+}
+
+/* Contact grid ------------------------------------------- */
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing);
+}
+
+/* Vzhled tabulky kontaktù */
+#contact-table {
+  width: 100%;
+  border-collapse: separate; /* oddìlené ohranièení */
+  border-spacing: 0;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: white;
+  font-size: 0.95rem;
+  overflow: hidden; /* pro zaoblení rohù */
+}
+
+#contact-table thead {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  font-weight: 600;
+  text-align: left;
+  user-select: none;
+}
+
+#contact-table thead th {
+  padding: 0.75rem 1rem;
+  border-right: 1px solid rgba(255,255,255,0.3);
+}
+
+#contact-table thead th:last-child {
+  border-right: none;
+}
+
+#contact-table tbody tr {
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.2s ease;
+}
+
+#contact-table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+#contact-table tbody tr:hover {
+  background-color: #e6f0ff;
+}
+
+#contact-table tbody td {
+  padding: 0.6rem 1rem;
+  border-right: 1px solid #eee;
+  vertical-align: middle;
+}
+
+#contact-table tbody td:last-child {
+  border-right: none;
+}
+
+/* Akèní tlaèítka ve sloupci Akce */
+#contact-table tbody td .button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+
+/* Character count ---------------------------------------- */
+#char-count {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #666;
+}
+#char-count.over {
+  color: #d9534f;
+}
+
+/* Template & User cards --------------------------------- */
+.template-card,
+.user-card,
+.contact-card {
+  padding: var(--spacing);
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+}
+
+/* Vzhled tabulky SMS historie (shodné se ZIP tabulkou kontaktù) */
+#sms-history-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: white;
+  font-size: 0.95rem;
+  overflow: hidden;
+}
+
+#sms-history-table thead {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  font-weight: 600;
+  text-align: left;
+  user-select: none;
+}
+
+#sms-history-table thead th {
+  padding: 0.75rem 1rem;
+  border-right: 1px solid rgba(255,255,255,0.3);
+}
+
+#sms-history-table thead th:last-child {
+  border-right: none;
+}
+
+#sms-history-table tbody tr {
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.2s ease;
+}
+
+#sms-history-table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+#sms-history-table tbody tr:hover {
+  background-color: #e6f0ff;
+}
+
+#sms-history-table tbody td {
+  padding: 0.6rem 1rem;
+  border-right: 1px solid #eee;
+  vertical-align: middle;
+}
+
+#sms-history-table tbody td:last-child {
+  border-right: none;
+}
+
+/* --- Modem status & menu --- */
+.modem-status p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+.modem-status progress {
+  width: 6rem;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+/* malé koleèko pro MQTT status */
+.status-dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: red;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+}
+.status-dot.connected { background: green; }
+.status-dot.disconnected { background: red; }
+
+/* Optimalizované sidebar menu */
+.sidebar .menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+.sidebar .menu li {
+  margin-bottom: 0.25rem;
+}
+.sidebar .menu a {
+  display: block;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: var(--text-color);
+  border-radius: var(--radius);
+  transition: background 0.2s;
+}
+.sidebar .menu a:hover,
+.sidebar .menu a.active {
+  background: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+/* Vzhled tabulky Historie volání */
+#call-log-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: white;
+  font-size: 0.95rem;
+  overflow: hidden;
+}
+
+#call-log-table thead {
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  font-weight: 600;
+  text-align: left;
+  user-select: none;
+}
+
+#call-log-table thead th {
+  padding: 0.75rem 1rem;
+  border-right: 1px solid rgba(255,255,255,0.3);
+}
+
+#call-log-table thead th:last-child {
+  border-right: none;
+}
+
+#call-log-table tbody tr {
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.2s ease;
+}
+
+#call-log-table tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+#call-log-table tbody tr:hover {
+  background-color: #e6f0ff;
+}
+
+#call-log-table tbody td {
+  padding: 0.6rem 1rem;
+  border-right: 1px solid #eee;
+  vertical-align: middle;
+}
+
+#call-log-table tbody td:last-child {
+  border-right: none;
+}
+
+/* moderní badge pro stav */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: white;
+}
+.badge.idle     { background: #6c757d; } /* šedá */
+.badge.sending  { background: #0275d8; } /* modrá */
+.badge.sent     { background: #5cb85c; } /* zelená */
+.badge.error    { background: #d9534f; } /* èervená */
+
+/* spinner ikona */
+.spinner {
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  width: 0.8rem;
+  height: 0.8rem;
+  animation: spin 0.6s linear infinite;
+  margin-right: 0.3rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* tabulka moderní (znovu použijeme styl styled-table) */
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+.styled-table thead {
+  background: var(--primary-color);
+  color: var(--secondary-color);
+  font-weight: 600;
+}
+.styled-table th,
+.styled-table td {
+  padding: 0.6rem 1rem;
+  border: 1px solid #eee;
+}
+.styled-table tbody tr:hover {
+  background: #f1f5fb;
+}
+

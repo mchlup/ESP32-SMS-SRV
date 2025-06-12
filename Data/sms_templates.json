@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "name": "Pozdrav",
+    "content": "Dobrý den {{name}}, děkujeme za Vaši zprávu."
+  },
+  {
+    "id": 2,
+    "name": "Upomínka platby",
+    "content": "Upozornění: platba {{amount}} Kč po splatnosti."
+  },
+  {
+    "id": 3,
+    "name": "Notifikace",
+    "content": "Událost {{event}} se koná {{date}} v {{time}}."
+  }
+]
+

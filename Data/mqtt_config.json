@@ -1,0 +1,13 @@
+{
+  "clientId": "ESP32_GSM_GW",
+  "username": "",
+  "password": "",
+  "broker": "",
+  "port": 1883,
+  "keepalive": 60,
+  "cleanSession": true,
+  "statusTopic": "",
+  "smsTopic": "",
+  "callerTopic": "gsm/callerNr",
+  "pubTopic": ""
+}

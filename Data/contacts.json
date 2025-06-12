@@ -1,0 +1,31 @@
+[
+  {
+    "id": 1,
+    "name": "Martin Chlup",
+    "phone": "+420725507981",
+    "email": "martin.chlup@radka.eu",
+    "group": "ICT"
+  },
+  {
+    "id": 2,
+    "name": "Pavel Reinberger",
+    "phone": "+420602318191",
+    "email": "pavel.reinberger@radka.eu",
+    "group": "ICT"
+  },
+  {
+    "id": 3,
+    "name": "Jakub Janeček",
+    "phone": "+420720842418",
+    "email": "jakub.janecek@radka.eu",
+    "group": "ICT"
+  },
+  {
+    "id": 4,
+    "name": "Aleš Pražan",
+    "phone": "+420720861175",
+    "email": "ales.prazan@radka.eu",
+    "group": "ICT"
+  }
+]
+

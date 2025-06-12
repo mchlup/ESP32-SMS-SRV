@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 GSM SMS Brána</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="modem-status">
+            <p>Operátor: <span id="operator-name">--</span></p>
+            <p>
+        Signál:
+        <progress id="signal-bar" max="31" value="0"></progress>
+        <span id="signal-strength">--</span>
+            </p>
+            <p>MQTT: 
+        <span id="mqtt-status-indicator" class="status-dot disconnected"></span>
+            </p>
+            <p>Čas: <span id="modem-time">--:--:--</span></p>
+        </div>
+        <nav class="menu">
+            <ul id="menu-list"></ul>
+        </nav>
+    </aside>
+
+  <header class="header">
+    <h1>ESP32 GSM SMS Brána</h1>
+  </header>
+
+  <main class="main" id="main-content">
+  <!-- <section id="dashboard"    class="card"><h2>Nástěnka</h2></section> -->
+  <section id="sms-history" class="card hidden">
+  <h2>SMS Historie</h2>
+
+  <div class="form-group">
+    <label for="sms-history-limit">Max počet uložených zpráv</label>
+    <input type="number" id="sms-history-limit" min="1" max="500">
+    <button type="button" id="sms-history-limit-save" class="button primary">
+      Uložit
+    </button>
+  </div>
+
+  <table id="sms-history-table">
+    <thead>
+      <tr>
+        <th>Čas odeslání</th>
+        <th>Příjemce</th>
+        <th>Text zprávy</th>
+      </tr>
+        </thead>
+        <tbody>
+        <!-- sem se vloží řádky skriptem -->
+        </tbody>
+    </table>
+    </section>
+
+    <section id="send-sms" class="card hidden">
+      <h2>Odesílání SMS</h2>
+      <form id="sms-form">
+        <div id="sms-status-panel" class="card hidden">
+        <h3>Stav odesílání</h3>
+        <table id="sms-status-table" class="styled-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Příjemce</th>
+                <th>Zpráva</th>
+                <th>Stav</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        </div>
+        <div id="sms-alert" class="alert" style="display: none;"></div>
+        <div class="form-group">
+          <label for="recipients">Příjemci</label>
+          <select id="recipients" multiple></select>
+          <small>Vyberte kontakty ze seznamu nebo zadejte ručně čísla.</small>
+        </div>
+        <div class="form-group">
+          <label for="manual-numbers">Ručně zadaná čísla</label>
+          <input type="text" id="manual-numbers" name="manualNumbers" placeholder="+420123456789, +420987654321">
+          <small>Čísla oddělujte čárkou.</small>
+        </div>
+        <div class="form-group">
+          <label for="message-text">Text zprávy</label>
+          <textarea id="message-text" name="message" rows="4" placeholder="Napište zprávu"></textarea>
+          <div id="char-count">0/160</div>
+        </div>
+        <div class="form-group">
+          <label for="send-time">Čas odeslání</label>
+          <input type="datetime-local" id="send-time" name="sendTime">
+          <small>Ponechte prázdné pro okamžité odeslání.</small>
+        </div>
+        <div class="form-group buttons">
+          <button type="submit" class="button primary">Odeslat nyní</button>
+          <button type="button" id="schedule-button" class="button secondary">Naplánovat</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="call-history" class="card hidden">
+      <h2>Historie volání</h2>
+      <table id="call-log-table">
+        <thead>
+          <tr><th>Datum &amp; čas</th><th>Číslo volajícího</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="sms-templates" class="card hidden">
+      <h2>SMS Šablony</h2>
+      <div id="template-list"></div>
+    </section>
+
+    <section id="contacts" class="card hidden">
+      <h2>Adresář</h2>
+      <div class="form-actions">
+        <button type="button" id="add-contact" class="button primary">➕ Přidat kontakt</button>
+        <button type="button" id="export-csv" class="button secondary">Export CSV</button>
+        <input type="file" id="import-csv" accept=".csv" class="button secondary">
+        <button type="button" id="sync-ldap" class="button secondary">Synchronizace LDAP</button>
+      </div>
+      <table id="contact-table">
+        <thead>
+          <tr><th>Jméno</th><th>Telefon</th><th>Email</th><th>Skupina</th><th>Akce</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="mqtt" class="card hidden">
+      <h2>MQTT</h2>
+      <form id="mqtt-form">
+        <div id="mqtt-alert" class="alert" style="display: none;"></div>
+        <div class="form-group">
+          <label for="mqtt-clientId">Client ID</label>
+          <input type="text" id="mqtt-clientId">
+        </div>
+        <div class="form-group">
+          <label for="mqtt-username">Uživatel</label>
+          <input type="text" id="mqtt-username">
+        </div>
+        <div class="form-group">
+          <label for="mqtt-password">Heslo</label>
+          <input type="password" id="mqtt-password">
+        </div>
+        <div class="form-group">
+          <label for="mqtt-broker">Broker</label>
+          <input type="text" id="mqtt-broker">
+        </div>
+        <div class="form-group">
+          <label for="mqtt-port">Port</label>
+          <input type="number" id="mqtt-port" value="1883">
+        </div>
+        <div class="form-group">
+          <label for="mqtt-keepalive">Keepalive (s)</label>
+          <input type="number" id="mqtt-keepalive" value="60">
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="mqtt-clean-session"> Clean Session</label>
+        </div>
+        <div class="form-group">
+          <label for="mqtt-caller-topic">Topic „Volající na modem“</label>
+          <input type="text" id="mqtt-caller-topic" name="callerTopic">
+        </div>
+        <div class="form-group">
+          <label for="mqtt-status-topic">Topic "Stav zařízení"</label>
+          <input type="text" id="mqtt-status-topic" name="statusTopic">
+        </div>
+        <div class="form-group">
+          <label for="mqtt-sms-topic">Topic "Odeslat SMS"</label>
+          <input type="text" id="mqtt-sms-topic" name="smsTopic">
+        </div>
+        <div class="form-group">
+          <label for="mqtt-pubTopic">Topic "Potvrzení odeslání (ACK)"</label>
+          <input type="text" id="mqtt-pubTopic" name="pubTopic">
+        </div>
+        <div class="form-group buttons">
+          <button type="submit" class="button primary">Uložit</button>
+          <button type="button" id="mqtt-test-btn" class="button secondary">Test spojení</button>
+        </div>
+        <div id="mqtt-status" style="margin-top:0.5rem;color:#333;"></div>
+      </form>
+    </section>
+
+    <section id="users" class="card hidden">
+      <h2>Uživatelé</h2>
+      <div id="user-list"></div>
+    </section>
+
+    <section id="settings" class="card hidden">
+  <h2>Nastavení</h2>
+  <form id="settings-form">
+    <!-- NTP synchronizace -->
+    <h3>NTP synchronizace</h3>
+    <div class="form-group">
+      <label for="ntp-server">NTP server</label>
+      <input type="text" id="ntp-server" name="ntpServer">
+    </div>
+    <div class="form-group">
+      <label for="ntp-server-port">Port</label>
+      <input type="number" id="ntp-server-port" name="ntpPort" min="1" max="65535">
+    </div>
+    <div class="form-group">
+      <label for="ntp-local-port">Lokální UDP port</label>
+      <input type="number" id="ntp-local-port" name="localPort" min="1" max="65535">
+    </div>
+    <div class="form-group">
+      <label for="ntp-retry">Interval retry (ms)</label>
+      <input type="number" id="ntp-retry" name="retryInterval" min="100" step="100">
+    </div>
+
+    <!-- Časové pásmo -->
+    <h3>Časové pásmo</h3>
+    <div class="form-group">
+      <label for="tz-string">POSIX TZ řetězec</label>
+      <input type="text" id="tz-string" name="tzString" placeholder="např. CET-1CEST,M3.5.0/2,M10.5.0/3">
+    </div>
+
+    <!-- GSM modem -->
+    <h3>GSM modem</h3>
+    <div class="form-group">
+      <label for="baud-rate">Baud rate</label>
+      <input type="number" id="baud-rate" name="baudRate" value="115200">
+    </div>
+    <div class="form-group">
+      <label><input type="checkbox" id="modem-auto-time"> Automatické NTP (AT+CTZU)</label>
+    </div>
+    <div class="form-group">
+      <label><input type="checkbox" id="modem-manual-time"> Ruční dotaz času (AT+CTZR)</label>
+    </div>
+    <div class="form-group">
+      <label><input type="checkbox" id="modem-callerid"> Caller ID (AT+CLIP)</label>
+    </div>
+
+    <!-- SMS time­outy -->
+    <h3>SMS time­outy</h3>
+    <div class="form-group">
+      <label for="timeout-prompt">Timeout na prompt ‘&gt;’ (ms)</label>
+      <input type="number" id="timeout-prompt" name="promptTimeout" min="100" step="100">
+    </div>
+    <div class="form-group">
+      <label for="timeout-sms">Timeout odeslání SMS (ms)</label>
+      <input type="number" id="timeout-sms" name="smsTimeout" min="1000" step="1000">
+    </div>
+    <div class="form-group">
+      <label for="cmd-interval">Interval mezi AT příkazy (ms)</label>
+      <input type="number" id="cmd-interval" name="cmdInterval" min="50" step="50">
+    </div>
+
+    <!-- RING nastavení -->
+    <h3>RING</h3>
+    <div class="form-group">
+      <label for="ring-count">Max. počet RING před zavěšením</label>
+      <input type="number" id="ring-count" name="maxRingCount" min="1" max="10">
+    </div>
+
+    <div class="form-group buttons">
+      <button type="submit" class="button primary">Uložit nastavení</button>
+    </div>
+    </form>
+    </section>
+    
+    <section id="ota" class="card hidden">
+        <h2>OTA Aktualizace</h2>
+        <iframe src="/ota" style="width:100%; height:200px; border:none;"></iframe>
+    </section>
+    <section id="about" class="card hidden"><h2>O Aplikaci</h2></section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2025 ESP32 GSM SMS Brána</p>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
+

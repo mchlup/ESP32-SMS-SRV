@@ -1,0 +1,21 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "name": "Správce",
+    "groups": ["Administrators", "SMS Managers"],
+    "phone": "+420725507981",
+    "email": "martin.chlup@radka.eu",
+    "role": "admin"
+  },
+  {
+    "id": 2,
+    "username": "user1",
+    "name": "Uživatel Jedna",
+    "groups": ["Users"],
+    "phone": "+420601234567",
+    "email": "user1@example.com",
+    "role": "user"
+  }
+]
+

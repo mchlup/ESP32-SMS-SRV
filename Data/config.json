@@ -1,0 +1,28 @@
+{
+  "menu": [
+    { "id": "sms-history",    "label": "SMS Historie" },
+    { "id": "send-sms",       "label": "Odesílání SMS" },
+    { "id": "call-history",   "label": "Historie volání" },
+    { "id": "sms-templates",  "label": "SMS Šablony" },
+    { "id": "contacts",       "label": "Adresář" },
+    { "id": "mqtt",           "label": "MQTT" },
+    { "id": "users",          "label": "Uživatelé" },
+    { "id": "settings",       "label": "Nastavení" },
+    { "id": "ota",            "label": "OTA Update" }
+  ],
+  "api": {
+    "contacts":    "/api/contacts",
+    "settings":   "/api/settings",
+    "contactsSave": "/api/contacts",
+    "sendSms":     "/api/send-sms",
+    "smsStatus":     "/api/sms-status",
+    "smsHistory": "/api/sms-history",
+    "scheduleSms": "/api/schedule-sms",
+    "ldapSync":    "/api/ldap-sync",
+    "modemStatus": "/api/modem-status",
+    "mqttConfig":  "/api/mqtt-config",
+    "mqttTest":    "/api/mqtt-test",
+    "callLog":     "/api/call-log"
+  }
+}
+
