@@ -5,9 +5,11 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <sys/time.h>
+#include "settings.h"
 
 // ====== Konfigurace a konstanty ======
-extern HardwareSerial SerialGSM(2);
+HardwareSerial SerialGSM(2);
+//extern HardwareSerial SerialGSM(2);
 static String urcBuffer;
 static unsigned long ringStartTimestamp = 0;
 static uint16_t ringCount = 0;
@@ -346,7 +348,9 @@ uint8_t getRingSetting() {
 
 // ====== Inicializace modemu ======
 void modemInit() {
-  SerialGSM.begin(115200, SERIAL_8N1, GSM_RX_PIN, GSM_TX_PIN);
+  SerialGSM.end();  // pro jistotu, pokud už běžel
+  SerialGSM.begin(settings.baudRate, SERIAL_8N1, GSM_RX_PIN, GSM_TX_PIN);  // RX, TX
+  //SerialGSM.begin(115200, SERIAL_8N1, GSM_RX_PIN, GSM_TX_PIN);
     delay(1000);
   sendAndPrint("AT");
     delay(200); 
@@ -596,17 +600,22 @@ bool modemScheduleSMS(const String& recipients, const String& message, const Str
 
 // ====== AT příkazy s očekávanou odpovědí ======
 bool sendAtCommand(const String& cmd, const String& expected, unsigned long timeout) {
-  flushSerialGSM();
-  SerialGSM.println(cmd);
-  unsigned long t0 = millis();
-  String resp;
-  while (millis() - t0 < timeout) {
-    if (SerialGSM.available()) {
-      resp += char(SerialGSM.read());
-      if (resp.indexOf(expected) != -1) return true;
+    Serial.print("> "); Serial.println(cmd); // log příkazu
+    flushSerialGSM();
+    SerialGSM.println(cmd);
+    unsigned long t0 = millis();
+    String resp;
+    while (millis() - t0 < timeout) {
+        if (SerialGSM.available()) {
+            resp += char(SerialGSM.read());
+            if (resp.indexOf(expected) != -1) {
+                Serial.print("< "); Serial.println(resp); // log odpovědi
+                return true;
+            }
+        }
     }
-  }
-  return false;
+    Serial.print("< "); Serial.println(resp); // log i při timeoutu/ERROR
+    return false;
 }
 
 // ====== Logování příchozího sériového provozu (debug) ======

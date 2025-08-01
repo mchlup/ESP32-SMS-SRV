@@ -410,14 +410,14 @@ void handleSendAtCommand(EthernetClient &client, const String &body) {
   }
 
   // Odeslat do UART modemu (např. Serial2)
-  Serial2.println(cmd);
+  SerialGSM.println(cmd);
 
   // Čekat na odpověď
   String response = "";
   unsigned long timeout = millis() + 1000;  // 1 s timeout
   while (millis() < timeout) {
-    while (Serial2.available()) {
-      char c = Serial2.read();
+    while (SerialGSM.available()) {
+      char c = SerialGSM.read();
       response += c;
     }
   }

@@ -3,6 +3,9 @@
 
 #pragma once
 #include <Arduino.h>
+#include <HardwareSerial.h>
+
+extern HardwareSerial SerialGSM;
 
 // ======= Pinout GSM modemu (uprav dle hw) =======
 #define GSM_RX_PIN   16  // RX2 → modul TX
