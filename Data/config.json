@@ -8,7 +8,9 @@
     { "id": "mqtt",           "label": "MQTT" },
     { "id": "users",          "label": "Uživatelé" },
     { "id": "settings",       "label": "Nastavení" },
-    { "id": "ota",            "label": "OTA Update" }
+    { "id": "ota",            "label": "OTA Update" },
+    { "id": "at-console", "label": "AT Konzole" }
+
   ],
   "api": {
     "contacts":    "/api/contacts",
@@ -22,7 +24,9 @@
     "modemStatus": "/api/modem-status",
     "mqttConfig":  "/api/mqtt-config",
     "mqttTest":    "/api/mqtt-test",
-    "callLog":     "/api/call-log"
+    "callLog":     "/api/call-log",
+    "sendAtCommand": "/api/at/send",
+    "atResponseLog": "/api/at/last-response"
   }
 }
 

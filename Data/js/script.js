@@ -28,6 +28,7 @@ async function init() {
     setupSmsHistory(config.api);
     setupMqttForm(config.api);
     setupSettingsForm(config.api);  // ← now passes the real API-endpoints object
+    setupAtConsole(config.api);
 
     setupAddContact(contacts);
   } catch (err) {
@@ -750,5 +751,54 @@ function setupSettingsForm(api) {
       alert('Chyba při ukládání nastavení');
     }
   };
+}
+
+function setupAtConsole(api) {
+  const sendBtn = document.getElementById('send-at-btn');
+  const inputEl = document.getElementById('at-command');
+  const outputEl = document.getElementById('at-response');
+  const refreshBtn = document.getElementById('refresh-response-btn');
+  const autoRefreshEl = document.getElementById('auto-refresh');
+
+  let refreshInterval = null;
+
+  if (!sendBtn || !inputEl || !outputEl) return;
+
+  sendBtn.onclick = async () => {
+    const command = inputEl.value.trim();
+    if (!command) return;
+    try {
+      const res = await fetch(api.sendAtCommand, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command })
+      });
+      if (!res.ok) throw new Error('Chyba při odeslání AT příkazu');
+      const data = await res.text();
+      outputEl.value = data;
+    } catch (err) {
+      outputEl.value = '❌ Chyba: ' + err.message;
+    }
+  };
+
+  refreshBtn.onclick = fetchLatestAtResponse;
+
+  autoRefreshEl.addEventListener('change', () => {
+    if (autoRefreshEl.checked) {
+      refreshInterval = setInterval(fetchLatestAtResponse, 3000);
+    } else {
+      clearInterval(refreshInterval);
+    }
+  });
+
+  async function fetchLatestAtResponse() {
+    try {
+      const res = await fetch(api.atResponseLog);
+      const text = await res.text();
+      outputEl.value = text;
+    } catch (err) {
+      outputEl.value = '❌ Chyba při čtení odpovědi: ' + err.message;
+    }
+  }
 }
 

@@ -26,6 +26,8 @@ void saveAdminPassword(const String& newPass);
 bool checkAuth(EthernetClient &client);
 void handleSetPassword(EthernetClient &client, const String &body);
 void handleSendSms(EthernetClient &client, const String &body);
+void handleSendAtCommand(EthernetClient &client, const String &body);
+void resetW5500();
 
 // Odeslání JSON odpovědi
 void sendJsonResponse(EthernetClient &client, int statusCode, const String &json);

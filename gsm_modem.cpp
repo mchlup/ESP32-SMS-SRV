@@ -365,12 +365,15 @@ void modemInit() {
 // ====== DTR řízení ======
 void setupDTR() {
   pinMode(DTR_PIN, OUTPUT);
+  //digitalWrite(DTR_PIN, HIGH);
+  digitalWrite(DTR_PIN, LOW);
+  delay(2000);
   digitalWrite(DTR_PIN, HIGH);
 }
 
 void wakeModem() {
   digitalWrite(DTR_PIN, LOW);
-  delay(200);
+  delay(2000);
   digitalWrite(DTR_PIN, HIGH);
 }
 

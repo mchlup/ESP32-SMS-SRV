@@ -9,6 +9,8 @@
 #include <LittleFS.h>
 #include "ntp_sync.h"
 
+#define W5500_RESET_PIN 5
+
 static const int CS_PIN = 5;
 static byte mac[] = {0xDE,0xAD,0xBE,0xEF,0xFE,0xED};
 static EthernetServer httpServer(80);
@@ -393,6 +395,38 @@ void handleScheduleSms(EthernetClient &client, const String &body) {
   client.print("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"success\":true}");
 }
 
+void handleSendAtCommand(EthernetClient &client, const String &body) {
+  StaticJsonDocument<256> doc;
+  if (deserializeJson(doc, body) != DeserializationError::Ok) {
+    sendError(client, 400, "Invalid JSON");
+    return;
+  }
+
+  String cmd = doc["command"] | "";
+  cmd.trim();
+  if (cmd.isEmpty()) {
+    sendError(client, 400, "Missing AT command");
+    return;
+  }
+
+  // Odeslat do UART modemu (např. Serial2)
+  Serial2.println(cmd);
+
+  // Čekat na odpověď
+  String response = "";
+  unsigned long timeout = millis() + 1000;  // 1 s timeout
+  while (millis() < timeout) {
+    while (Serial2.available()) {
+      char c = Serial2.read();
+      response += c;
+    }
+  }
+
+  // Odpověď jako čistý text
+  client.print("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n");
+  client.print(response);
+}
+
 // Podávání statických souborů
 static void serveFile(EthernetClient& client, const char* path, const char* contentType) {
   if (!LittleFS.exists(path)) {
@@ -412,7 +446,16 @@ static void serveFile(EthernetClient& client, const char* path, const char* cont
   f.close();
 }
 
+void resetW5500() {
+  pinMode(W5500_RESET_PIN, OUTPUT);
+  digitalWrite(W5500_RESET_PIN, LOW);
+  delay(100);  // minimálně 50ms
+  digitalWrite(W5500_RESET_PIN, HIGH);
+  delay(200);  // počkej na inicializaci W5500
+}
+
 void networkInit() {
+  resetW5500();
   SPI.begin(18, 19, 23); // Lze upravit podle HW
   Ethernet.init(CS_PIN);
   Serial.print("DHCP… ");
@@ -480,6 +523,30 @@ void networkLoop() {
     client.stop();
     return;
   }
+
+  // --- POST: AT příkaz z webu ---
+  if (isPost && path == "/api/at/send") {
+    int contentLength = 0;
+    while (client.available()) {
+      String headerLine = client.readStringUntil('\n');
+      headerLine.trim();
+      if (headerLine.length() == 0) break;
+      if (headerLine.startsWith("Content-Length:")) {
+        contentLength = headerLine.substring(15).toInt();
+      }
+    }
+    String body;
+    while ((int)body.length() < contentLength) {
+      if (client.available()) {
+        body += (char)client.read();
+      }
+    }
+    handleSendAtCommand(client, body);
+    delay(1);
+    client.stop();
+    return;
+  }
+
 
   // --- POST: uložení nastavení ---
 if (isPost && path == "/api/settings") {
