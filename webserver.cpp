@@ -396,6 +396,7 @@ void handleScheduleSms(EthernetClient &client, const String &body) {
 }
 
 void handleSendAtCommand(EthernetClient &client, const String &body) {
+/*
   StaticJsonDocument<256> doc;
   if (deserializeJson(doc, body) != DeserializationError::Ok) {
     sendError(client, 400, "Invalid JSON");
@@ -425,6 +426,7 @@ void handleSendAtCommand(EthernetClient &client, const String &body) {
   // Odpověď jako čistý text
   client.print("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n");
   client.print(response);
+*/
 }
 
 // Podávání statických souborů

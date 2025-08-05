@@ -5,11 +5,9 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <sys/time.h>
-#include "settings.h"
 
 // ====== Konfigurace a konstanty ======
-HardwareSerial SerialGSM(2);
-//extern HardwareSerial SerialGSM(2);
+extern HardwareSerial SerialGSM(2);
 static String urcBuffer;
 static unsigned long ringStartTimestamp = 0;
 static uint16_t ringCount = 0;
@@ -348,9 +346,7 @@ uint8_t getRingSetting() {
 
 // ====== Inicializace modemu ======
 void modemInit() {
-  SerialGSM.end();  // pro jistotu, pokud už běžel
-  SerialGSM.begin(settings.baudRate, SERIAL_8N1, GSM_RX_PIN, GSM_TX_PIN);  // RX, TX
-  //SerialGSM.begin(115200, SERIAL_8N1, GSM_RX_PIN, GSM_TX_PIN);
+  SerialGSM.begin(9600, SERIAL_8N1, GSM_RX_PIN, GSM_TX_PIN);
     delay(1000);
   sendAndPrint("AT");
     delay(200); 
@@ -369,15 +365,12 @@ void modemInit() {
 // ====== DTR řízení ======
 void setupDTR() {
   pinMode(DTR_PIN, OUTPUT);
-  //digitalWrite(DTR_PIN, HIGH);
-  digitalWrite(DTR_PIN, LOW);
-  delay(2000);
   digitalWrite(DTR_PIN, HIGH);
 }
 
 void wakeModem() {
   digitalWrite(DTR_PIN, LOW);
-  delay(2000);
+  delay(200);
   digitalWrite(DTR_PIN, HIGH);
 }
 
@@ -385,10 +378,22 @@ void wakeModem() {
 // Pouze parsuje jeden URC-řádek
 // ====== Caller ID / RING zpracování ======
 void processCallerIDLine(const String &line) {
-  static bool clipSeen    = false;  // indikace, že už proběhl CLIP pro tento hovor
-  static bool callLogged  = false;  // jestli už jsme ho logovali
-  // 1) CLIP URC
+  static bool clipSeen = false;        // indikace, že už proběhl CLIP pro tento hovor
+  static bool callLogged = false;      // jestli už jsme hovor logovali
+  static unsigned long lastHangup = 0; // čas posledního zavěšení (ATH)
+  static String lastCallerNum = "";    // poslední volající (pro opakování)
+
+  unsigned long now = millis();
+
+  // 1) CLIP URC (příchozí číslo volajícího)
   if (line.startsWith("+CLIP:")) {
+    // Debounce: pokud bylo před chvílí zavěšeno, ignoruj nové CLIP události
+    if (now - lastHangup < 5000) {   // 5000 ms = 5 sekund, lze změnit dle potřeby
+      GSM_DBG(F("CLIP ignorován - krátce po zavěšení"));
+      SerialGSM.println("ATH");
+      return;
+    }
+
     int f = line.indexOf('"');
     int l = line.indexOf('"', f + 1);
     if (f >= 0 && l > f) {
@@ -399,40 +404,56 @@ void processCallerIDLine(const String &line) {
       GSM_DBG(String(F("📡 CallerID raw: ")) + rawNum);
       GSM_DBG(String(F("📡 CallerID mqtt: ")) + mqttNum);
 
-      lastCaller = mqttNum;
+      lastCallerNum = mqttNum;
 
       // Označíme, že už jsme CLIP viděli a začíná nové volání
-      clipSeen   = true;
-      ringCount  = 0;
+      clipSeen = true;
+      ringCount = 0;
 
-      // Publikace na MQTT
+      // Publikace na MQTT (odeslání čísla)
       mqttPublishCaller(mqttNum);
 
-      // LOG pouze jednou
+      // LOG pouze jednou pro tento hovor
       if (!callLogged) {
-        logCallToFile(rawNum);      // uloží do call_log.json :contentReference[oaicite:0]{index=0}
+        logCallToFile(rawNum);
         callLogged = true;
       }
     } else {
       GSM_DBG(F("⚠️ CLIP parse error"));
     }
   }
-  // 2) RING (jen pokud jsme už viděli CLIP)
+  // 2) RING (pouze pokud jsme už viděli CLIP)
   else if (clipSeen && line == "RING") {
     ringCount = (ringCount == 0) ? 1 : (ringCount + 1);
     GSM_DBG(String(F("🔔 RING #")) + ringCount);
 
     // Po dosažení max. počtu vyzvánění ukončíme hovor
-    if (ringCount >= maxRingCount) {
+    if (ringCount >= 1) {
+      // Nejprve přijmi hovor (ATA)
+      /*
+      SerialGSM.println("ATA");
+      GSM_DBG(F("📞 ATA (příjem hovoru)"));
+      delay(1500); // počkej na navázání spojení (1,5 s je většinou dostatečné)
+      */
+      // Poté zavěsi (ATH)
       SerialGSM.println("ATH");
-      GSM_DBG(String(F("📴 ATH after ")) + ringCount + F(" rings"));
+      GSM_DBG(String(F("📴 ATH po ATA, hovor ukončen")));
+
+      // Publikace prázdného čísla (vynulování MQTT topicu)
+      mqttPublishCaller("");
+
+      // Nastav čas zavěšení pro debounce
+      lastHangup = now;
+
       // Resetujeme stav pro další hovory
-      clipSeen    = false;
-      ringCount   = 0;
-      callLogged  = false;  // znovu povolíme log na příští CLIP
+      clipSeen = false;
+      ringCount = 0;
+      callLogged = false;
     }
   }
 }
+
+
 
 // Přebírá stejnou řádku a posílá ji do SMS stavového stroje
 void processSmsResponseLine(const String &line) {
@@ -600,22 +621,17 @@ bool modemScheduleSMS(const String& recipients, const String& message, const Str
 
 // ====== AT příkazy s očekávanou odpovědí ======
 bool sendAtCommand(const String& cmd, const String& expected, unsigned long timeout) {
-    Serial.print("> "); Serial.println(cmd); // log příkazu
-    flushSerialGSM();
-    SerialGSM.println(cmd);
-    unsigned long t0 = millis();
-    String resp;
-    while (millis() - t0 < timeout) {
-        if (SerialGSM.available()) {
-            resp += char(SerialGSM.read());
-            if (resp.indexOf(expected) != -1) {
-                Serial.print("< "); Serial.println(resp); // log odpovědi
-                return true;
-            }
-        }
+  flushSerialGSM();
+  SerialGSM.println(cmd);
+  unsigned long t0 = millis();
+  String resp;
+  while (millis() - t0 < timeout) {
+    if (SerialGSM.available()) {
+      resp += char(SerialGSM.read());
+      if (resp.indexOf(expected) != -1) return true;
     }
-    Serial.print("< "); Serial.println(resp); // log i při timeoutu/ERROR
-    return false;
+  }
+  return false;
 }
 
 // ====== Logování příchozího sériového provozu (debug) ======
